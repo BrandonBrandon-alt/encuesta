@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard SmartBus — Análisis de Encuestas</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #F7F4EF;
+            --card: #FFFFFF;
+            --night: #0D0D1A;
+            --bus: #FF5722;
+            --bus2: #FF8A50;
+            --accent: #FFB300;
+            --green: #2ECC71;
+            --blue: #3498DB;
+            --purple: #9B59B6;
+            --teal: #1ABC9C;
+            --border: #E8E3DC;
+            --muted: #9A9487;
+            --text: #1A1612;
+            --shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* TOP BAR */
+        .topbar {
+            background: var(--night);
+            padding: 0 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 60px;
+            position: sticky;
+            top: 0;
+            z-index: 200;
+        }
+
+        .topbar-logo {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 16px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topbar-logo .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--bus);
+            border-radius: 50%;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .live-badge {
+            background: rgba(46, 204, 113, 0.15);
+            color: #2ecc71;
+            border: 1px solid rgba(46, 204, 113, 0.3);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: #2ecc71;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .btn-refresh {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: white;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            padding: 7px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-refresh:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* HERO STATS */
+        .hero-stats {
+            background: var(--night);
+            padding: 32px 32px 48px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-stats::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 32px;
+            background: var(--bg);
+            clip-path: ellipse(55% 100% at 50% 100%);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-family: 'Syne', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: white;
+        }
+
+        .stat-value.orange {
+            color: var(--bus2);
+        }
+
+        .stat-value.yellow {
+            color: var(--accent);
+        }
+
+        .stat-value.green {
+            color: var(--green);
+        }
+
+        .stat-sub {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.35);
+            margin-top: 4px;
+        }
+
+        /* MAIN GRID */
+        .main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+
+        .section-title-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            margin-top: 36px;
+        }
+
+        .section-badge {
+            background: var(--bus);
+            color: white;
+            font-family: 'Syne', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 4px;
+        }
+
+        .section-label {
+            font-family: 'Syne', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .chart-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            transition: box-shadow 0.2s;
+        }
+
+        .chart-card:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        .chart-card.wide {
+            grid-column: 1 / -1;
+        }
+
+        .chart-card h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .chart-card .chart-sub {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 20px;
+        }
+
+        .chart-wrap {
+            position: relative;
+            height: 220px;
+        }
+
+        .chart-wrap.tall {
+            height: 300px;
+        }
+
+        /* Bar chart custom (horizontal) */
+        .hbar-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .hbar-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .hbar-label {
+            font-size: 12px;
+            color: var(--muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .hbar-label span {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .hbar-track {
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .hbar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+
+        /* AI Analysis card */
+        .ai-card {
+            background: linear-gradient(135deg, var(--night) 0%, #1a1a3e 100%);
+            border-radius: 16px;
+            padding: 28px;
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        .ai-card h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ai-card .chart-sub {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 20px;
+        }
+
+        .ai-insights {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .ai-insight {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 14px 16px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .ai-insight strong {
+            color: var(--bus2);
+        }
+
+        .ai-loading {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+        }
+
+        .ai-loading .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(255, 87, 34, 0.3);
+            border-top-color: var(--bus);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Responses table */
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th {
+            background: var(--bg);
+            font-family: 'Syne', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--muted);
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+            vertical-align: top;
+        }
+
+        tr:hover td {
+            background: #FAF7F2;
+        }
+
+        .tag {
+            display: inline-block;
+            background: rgba(255, 87, 34, 0.1);
+            color: var(--bus);
+            font-size: 11px;
+            padding: 2px 7px;
+            border-radius: 3px;
+            margin: 1px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 24px;
+            color: var(--muted);
+        }
+
+        .empty-state .big {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 20px;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            line-height: 1.6;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--border);
+            border-radius: 10px;
+            padding: 4px;
+            margin-bottom: 24px;
+            width: fit-content;
+        }
+
+        .tab {
+            padding: 8px 20px;
+            border-radius: 7px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--muted);
+        }
+
+        .tab.active {
+            background: white;
+            color: var(--text);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+            font-weight: 600;
+        }
+
+        .export-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bus);
+            color: white;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.2s;
+        }
+
+        .export-btn:hover {
+            background: #e64a19;
+        }
+
+        @media (max-width: 640px) {
+            .main {
+                padding: 16px;
+            }
+
+            .hero-stats {
+                padding: 20px 16px 40px;
+            }
+
+            .topbar {
+                padding: 0 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="topbar">
+        <div class="topbar-logo">
+            <div class="dot"></div>SmartBus — Dashboard Analítico
+        </div>
+        <div class="topbar-right">
+            <div class="live-badge">
+                <div class="live-dot"></div>En vivo
+            </div>
+            <button class="btn-refresh" onclick="loadAndRender()">↻ Actualizar</button>
+        </div>
+    </div>
+
+    <div class="hero-stats">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total respuestas</div>
+                <div class="stat-value orange" id="statTotal">0</div>
+                <div class="stat-sub">encuestas completadas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Satisfacción promedio</div>
+                <div class="stat-value yellow" id="statSatisfaccion">—</div>
+                <div class="stat-sub">sobre 5 posibles</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Dispositivo líder</div>
+                <div class="stat-value green" id="statDispositivo">—</div>
+                <div class="stat-sub">más usado</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Rango de edad top</div>
+                <div class="stat-value" style="color:#BB86FC" id="statEdad">—</div>
+                <div class="stat-sub">más frecuente</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Ocupación top</div>
+                <div class="stat-value" style="color:#64B5F6" id="statOcupacion">—</div>
+                <div class="stat-sub">más frecuente</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main">
+
+        <div id="emptyState" class="empty-state" style="display:none">
+            <div class="big">📋</div>
+            <h3>Aún no hay respuestas</h3>
+            <p>Comparte la encuesta con tus usuarios. Los datos aparecerán aquí automáticamente en tiempo real.</p>
+        </div>
+
+        <div id="dashboardContent">
+
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('graficas', this)">📊 Gráficas</button>
+                <button class="tab" onclick="showTab('analisis', this)">🤖 Análisis IA</button>
+                <button class="tab" onclick="showTab('respuestas', this)">📝 Respuestas</button>
+            </div>
+
+            <!-- TAB GRAFICAS -->
+            <div id="tab-graficas">
+
+                <div class="section-title-row">
+                    <div class="section-badge">1</div>
+                    <div class="section-label">Perfil Demográfico</div>
+                </div>
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3>Distribución por Edad</h3>
+                        <div class="chart-sub">Rango etario de los encuestados</div>
+                        <div class="chart-wrap"><canvas id="chartEdad"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Género</h3>
+                        <div class="chart-sub">Distribución de género</div>
+                        <div class="chart-wrap"><canvas id="chartGenero"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Estrato Socioeconómico</h3>
+                        <div class="chart-sub">Estratificación de respondentes</div>
+                        <div class="chart-wrap"><canvas id="chartEstrato"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Nivel de Ingresos</h3>
+                        <div class="chart-sub">Rango salarial en SMMLV</div>
+                        <div class="chart-wrap"><canvas id="chartIngresos"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Ocupación</h3>
+                        <div class="chart-sub">Situación laboral</div>
+                        <div class="chart-wrap"><canvas id="chartOcupacion"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="section-title-row">
+                    <div class="section-badge">2</div>
+                    <div class="section-label">Experiencia con Apps Actuales</div>
+                </div>
+                <div class="charts-grid">
+                    <div class="chart-card wide">
+                        <h3>Apps de Transporte en Uso</h3>
+                        <div class="chart-sub">Selección múltiple — porcentaje sobre total de respuestas</div>
+                        <div id="hbarApps" class="hbar-list"></div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Nivel de Satisfacción</h3>
+                        <div class="chart-sub">Con apps actualmente disponibles</div>
+                        <div class="chart-wrap"><canvas id="chartSatisfaccion"></canvas></div>
+                    </div>
+                    <div class="chart-card wide">
+                        <h3>Principales Frustraciones</h3>
+                        <div class="chart-sub">Lo que más molesta a los usuarios</div>
+                        <div id="hbarFrustracion" class="hbar-list"></div>
+                    </div>
+                </div>
+
+                <div class="section-title-row">
+                    <div class="section-badge">3</div>
+                    <div class="section-label">Frecuencia y Comportamiento</div>
+                </div>
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3>Frecuencia de Viajes</h3>
+                        <div class="chart-sub">¿Con qué frecuencia usan el servicio?</div>
+                        <div class="chart-wrap"><canvas id="chartFrecuencia"></canvas></div>
+                    </div>
+                    <div class="chart-card wide">
+                        <h3>Tareas Principales en la App</h3>
+                        <div class="chart-sub">Lo que los usuarios buscan hacer</div>
+                        <div id="hbarTareas" class="hbar-list"></div>
+                    </div>
+                    <div class="chart-card wide">
+                        <h3>Situaciones de Uso</h3>
+                        <div class="chart-sub">¿Cuándo usan la app?</div>
+                        <div id="hbarSituaciones" class="hbar-list"></div>
+                    </div>
+                </div>
+
+                <div class="section-title-row">
+                    <div class="section-badge">4</div>
+                    <div class="section-label">Tecnología y Conectividad</div>
+                </div>
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3>Dispositivo Principal</h3>
+                        <div class="chart-sub">¿Desde dónde acceden?</div>
+                        <div class="chart-wrap"><canvas id="chartDispositivo"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Tipo de Conectividad</h3>
+                        <div class="chart-sub">Condición de internet habitual</div>
+                        <div class="chart-wrap"><canvas id="chartConectividad"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Nivel Tecnológico</h3>
+                        <div class="chart-sub">Familiaridad con e-tickets y QR</div>
+                        <div class="chart-wrap"><canvas id="chartTechConocimiento"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="section-title-row">
+                    <div class="section-badge">5</div>
+                    <div class="section-label">Actitudes y Valores</div>
+                </div>
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3>Confianza en Pagos Digitales</h3>
+                        <div class="chart-sub">Disposición a pagar en línea</div>
+                        <div class="chart-wrap"><canvas id="chartConfianza"></canvas></div>
+                    </div>
+                    <div class="chart-card wide">
+                        <h3>¿Qué Valoran Más?</h3>
+                        <div class="chart-sub">Atributos clave (máx. 2 selecciones por usuario)</div>
+                        <div id="hbarValores" class="hbar-list"></div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Estilo de Aprendizaje</h3>
+                        <div class="chart-sub">Cómo prefieren aprender la app</div>
+                        <div class="chart-wrap"><canvas id="chartAprendizaje"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="section-title-row">
+                    <div class="section-badge">6-7</div>
+                    <div class="section-label">Descubrimiento y Funciones Deseadas</div>
+                </div>
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3>¿Cómo Descubren Apps?</h3>
+                        <div class="chart-sub">Canal de descubrimiento preferido</div>
+                        <div class="chart-wrap"><canvas id="chartDescubrimiento"></canvas></div>
+                    </div>
+                    <div class="chart-card wide">
+                        <h3>Funciones Extra Deseadas</h3>
+                        <div class="chart-sub">Lo que los usuarios quieren ver en SmartBus</div>
+                        <div id="hbarFunciones" class="hbar-list"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- TAB ANALISIS IA -->
+            <div id="tab-analisis" style="display:none">
+                <div class="ai-card">
+                    <h3>🤖 Análisis Inteligente</h3>
+                    <div class="chart-sub">Insights generados por IA basados en las respuestas recolectadas</div>
+                    <div id="aiContent">
+                        <div class="ai-loading">
+                            <div class="spinner"></div>Analizando datos...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB RESPUESTAS -->
+            <div id="tab-respuestas" style="display:none">
+                <button class="export-btn" onclick="exportCSV()">⬇ Exportar CSV</button>
+                <div class="chart-card">
+                    <h3>Respuestas Individuales</h3>
+                    <div class="chart-sub">Todas las respuestas almacenadas</div>
+                    <div class="table-wrap">
+                        <table id="responsesTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Fecha</th>
+                                    <th>Edad</th>
+                                    <th>Género</th>
+                                    <th>Ciudad</th>
+                                    <th>Estrato</th>
+                                    <th>Ingresos</th>
+                                    <th>Ocupación</th>
+                                    <th>Satisfacción</th>
+                                    <th>Frecuencia</th>
+                                    <th>Dispositivo</th>
+                                    <th>Conectividad</th>
+                                    <th>Nivel Tech</th>
+                                    <th>Confianza Pago</th>
+                                    <th>Descubrimiento</th>
+                                    <th>Apps Usadas</th>
+                                    <th>Frustraciones</th>
+                                    <th>Tareas</th>
+                                    <th>Valores</th>
+                                    <th>Funciones Extra</th>
+                                </tr>
+                            </thead>
+                            <tbody id="responsesBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Compatibility shim for window.storage
+        if (!window.storage) {
+            window.storage = {
+                get: async (key) => ({ value: localStorage.getItem(key) }),
+                set: async (key, value) => { localStorage.setItem(key, value); }
+            };
+        }
+
+        let allResponses = [];
+        let charts = {};
+
+        const COLORS = ['#FF5722', '#FFB300', '#2ECC71', '#3498DB', '#9B59B6', '#1ABC9C', '#E74C3C', '#F39C12'];
+        const CHART_DEFAULTS = {
+            plugins: { legend: { display: false } },
+            scales: { x: { grid: { display: false } }, y: { grid: { color: '#f0ece6' }, ticks: { font: { family: 'DM Sans' } } } },
+            maintainAspectRatio: false,
+            animation: { duration: 800, easing: 'easeInOutQuart' }
+        };
+
+        function freq(arr, key) {
+            const counts = {};
+            arr.forEach(r => {
+                const v = r[key];
+                if (Array.isArray(v)) v.forEach(x => { counts[x] = (counts[x] || 0) + 1; });
+                else if (v) counts[v] = (counts[v] || 0) + 1;
+            });
+            return counts;
+        }
+
+        function topKey(counts) {
+            return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
+        }
+
+        function makeBar(id, labels, data, colors) {
+            if (charts[id]) charts[id].destroy();
+            const ctx = document.getElementById(id)?.getContext('2d');
+            if (!ctx) return;
+            charts[id] = new Chart(ctx, {
+                type: 'bar',
+                data: { labels, datasets: [{ data, backgroundColor: colors || COLORS, borderRadius: 6, borderSkipped: false }] },
+                options: { ...CHART_DEFAULTS, plugins: { legend: { display: false } } }
+            });
+        }
+
+        function makeDoughnut(id, labels, data) {
+            if (charts[id]) charts[id].destroy();
+            const ctx = document.getElementById(id)?.getContext('2d');
+            if (!ctx) return;
+            charts[id] = new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels, datasets: [{ data, backgroundColor: COLORS, borderWidth: 2, borderColor: '#fff' }] },
+                options: { maintainAspectRatio: false, animation: { duration: 800 }, plugins: { legend: { position: 'bottom', labels: { font: { family: 'DM Sans', size: 11 }, boxWidth: 10, padding: 8 } } } }
+            });
+        }
+
+        function makeHBar(containerId, counts, total, color) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+            container.innerHTML = sorted.map(([label, count]) => {
+                const pct = Math.round((count / total) * 100);
+                return `<div class="hbar-item">
+      <div class="hbar-label">${label}<span>${count} (${pct}%)</span></div>
+      <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%;background:${color || '#FF5722'}"></div></div>
+    </div>`;
+            }).join('');
+        }
+
+        function updateKPIs(responses) {
+            const n = responses.length;
+            document.getElementById('statTotal').textContent = n;
+
+            const satMap = { 'Muy insatisfecho': 1, 'Insatisfecho': 2, 'Neutral': 3, 'Satisfecho': 4, 'Muy satisfecho': 5 };
+            const satVals = responses.map(r => satMap[r.satisfaccion]).filter(Boolean);
+            const satAvg = satVals.length ? (satVals.reduce((a, b) => a + b, 0) / satVals.length).toFixed(1) : '—';
+            document.getElementById('statSatisfaccion').textContent = satAvg;
+
+            const disp = freq(responses, 'dispositivo');
+            document.getElementById('statDispositivo').textContent = topKey(disp) || '—';
+
+            const edades = freq(responses, 'edad');
+            document.getElementById('statEdad').textContent = topKey(edades) || '—';
+
+            const ocups = freq(responses, 'ocupacion');
+            document.getElementById('statOcupacion').textContent = topKey(ocups) || '—';
+        }
+
+        function renderCharts(responses) {
+            const n = responses.length;
+            if (!n) return;
+
+            // Edad
+            const edadOrder = ['Menos de 18', '18-25', '26-35', '36-45', '46-60', 'Más de 60'];
+            const edadC = freq(responses, 'edad');
+            makeBar('chartEdad', edadOrder, edadOrder.map(k => edadC[k] || 0));
+
+            // Género
+            const genC = freq(responses, 'genero');
+            makeDoughnut('chartGenero', Object.keys(genC), Object.values(genC));
+
+            // Estrato
+            const estC = freq(responses, 'estrato');
+            const estOrder = ['1', '2', '3', '4', '5', '6'];
+            makeBar('chartEstrato', estOrder, estOrder.map(k => estC[k] || 0), COLORS);
+
+            // Ingresos
+            const ingOrder = ['Menos de 1 SMMLV', '1 a 2 SMMLV', '2 a 4 SMMLV', 'Más de 4 SMMLV'];
+            const ingC = freq(responses, 'ingresos');
+            makeBar('chartIngresos', ingOrder.map(k => k.replace(' SMMLV', '').replace('Menos de ', '<').replace('Más de ', '>')), ingOrder.map(k => ingC[k] || 0));
+
+            // Ocupación
+            const ocC = freq(responses, 'ocupacion');
+            makeDoughnut('chartOcupacion', Object.keys(ocC), Object.values(ocC));
+
+            // Apps (multiple)
+            makeHBar('hbarApps', freq(responses, 'apps'), n, '#3498DB');
+
+            // Satisfacción
+            const satOrder = ['Muy insatisfecho', 'Insatisfecho', 'Neutral', 'Satisfecho', 'Muy satisfecho'];
+            const satC = freq(responses, 'satisfaccion');
+            makeBar('chartSatisfaccion', satOrder.map(k => k.split(' ').slice(-1)[0]), satOrder.map(k => satC[k] || 0), ['#E74C3C', '#E67E22', '#F1C40F', '#2ECC71', '#27AE60']);
+
+            // Frustraciones
+            makeHBar('hbarFrustracion', freq(responses, 'frustracion'), n, '#E74C3C');
+
+            // Frecuencia
+            const frOrder = ['Diario', '2-3 veces/semana', 'Quincenal', 'Mensual', 'Ocasionalmente'];
+            const frC = freq(responses, 'frecuencia');
+            makeBar('chartFrecuencia', frOrder.map(k => k.split(' ')[0]), frOrder.map(k => frC[k] || 0));
+
+            // Tareas
+            makeHBar('hbarTareas', freq(responses, 'tareas'), n, '#9B59B6');
+
+            // Situaciones
+            makeHBar('hbarSituaciones', freq(responses, 'situaciones'), n, '#1ABC9C');
+
+            // Dispositivo
+            const dpC = freq(responses, 'dispositivo');
+            makeDoughnut('chartDispositivo', Object.keys(dpC), Object.values(dpC));
+
+            // Conectividad
+            const conC = freq(responses, 'conectividad');
+            makeBar('chartConectividad', Object.keys(conC), Object.values(conC));
+
+            // Tech conocimiento
+            const techC = freq(responses, 'tech_conocimiento');
+            makeDoughnut('chartTechConocimiento', Object.keys(techC), Object.values(techC));
+
+            // Confianza pago
+            const cpC = freq(responses, 'confianza_pago');
+            makeBar('chartConfianza', Object.keys(cpC), Object.values(cpC), ['#2ECC71', '#F39C12', '#E74C3C']);
+
+            // Valores
+            makeHBar('hbarValores', freq(responses, 'valores'), n, '#FF5722');
+
+            // Aprendizaje
+            const apC = freq(responses, 'aprendizaje');
+            makeDoughnut('chartAprendizaje', Object.keys(apC), Object.values(apC));
+
+            // Descubrimiento
+            const dcC = freq(responses, 'descubrimiento');
+            makeBar('chartDescubrimiento', Object.keys(dcC).map(k => k.split(' ').slice(0, 2).join(' ')), Object.values(dcC));
+
+            // Funciones extra
+            makeHBar('hbarFunciones', freq(responses, 'funciones_extra'), n, '#FFB300');
+        }
+
+        function renderTable(responses) {
+            const tbody = document.getElementById('responsesBody');
+            tbody.innerHTML = responses.map((r, i) => {
+                const date = new Date(r.timestamp).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: '2-digit' });
+                const tags = arr => Array.isArray(arr) ? arr.map(v => `<span class="tag">${v}</span>`).join('') : (r[arr] || '—');
+                return `<tr>
+      <td><strong>${i + 1}</strong></td>
+      <td>${date}</td>
+      <td>${r.edad || '—'}</td>
+      <td>${r.genero || '—'}</td>
+      <td>${r.ciudad || '—'}</td>
+      <td>${r.estrato || '—'}</td>
+      <td>${r.ingresos || '—'}</td>
+      <td>${r.ocupacion || '—'}</td>
+      <td>${r.satisfaccion || '—'}</td>
+      <td>${r.frecuencia || '—'}</td>
+      <td>${r.dispositivo || '—'}</td>
+      <td>${r.conectividad || '—'}</td>
+      <td>${r.tech_conocimiento || '—'}</td>
+      <td>${r.confianza_pago || '—'}</td>
+      <td>${r.descubrimiento || '—'}</td>
+      <td>${tags(r.apps)}</td>
+      <td>${tags(r.frustracion)}</td>
+      <td>${tags(r.tareas)}</td>
+      <td>${tags(r.valores)}</td>
+      <td>${tags(r.funciones_extra)}</td>
+    </tr>`;
+            }).join('');
+        }
+
+        async function generateAIAnalysis(responses) {
+            const aiContent = document.getElementById('aiContent');
+            if (!responses.length) {
+                aiContent.innerHTML = '<div class="ai-loading" style="color:rgba(255,255,255,0.4)">Sin datos suficientes para analizar.</div>';
+                return;
+            }
+
+            aiContent.innerHTML = '<div class="ai-loading"><div class="spinner"></div>Generando insights con IA...</div>';
+
+            // Build summary stats for AI
+            const n = responses.length;
+            const satMap = { 'Muy insatisfecho': 1, 'Insatisfecho': 2, 'Neutral': 3, 'Satisfecho': 4, 'Muy satisfecho': 5 };
+            const satAvg = (responses.map(r => satMap[r.satisfaccion] || 0).reduce((a, b) => a + b, 0) / n).toFixed(1);
+            const topEdad = topKey(freq(responses, 'edad'));
+            const topDisp = topKey(freq(responses, 'dispositivo'));
+            const topFrust = topKey(freq(responses, 'frustracion'));
+            const topValor = topKey(freq(responses, 'valores'));
+            const topFuncion = topKey(freq(responses, 'funciones_extra'));
+            const topConfianza = topKey(freq(responses, 'confianza_pago'));
+            const topApps = Object.entries(freq(responses, 'apps')).sort((a, b) => b[1] - a[1]).slice(0, 3).map(e => e[0]).join(', ');
+
+            const prompt = `Eres un analista de UX y movilidad para SmartBus Colombia, una app de transporte.
+Analiza estos datos de encuesta (${n} respuestas) y genera 5 insights accionables y concisos:
+
+- Satisfacción promedio: ${satAvg}/5
+- Rango de edad más frecuente: ${topEdad}
+- Dispositivo más usado: ${topDisp}
+- Principal frustración: ${topFrust}
+- Valor más apreciado: ${topValor}
+- Función extra más deseada: ${topFuncion}
+- Confianza en pagos: ${topConfianza}
+- Apps que compiten directamente: ${topApps}
+
+Genera exactamente 5 insights en español, uno por párrafo, numerados del 1 al 5.
+Cada insight debe ser máx 2 oraciones y orientado a decisiones de producto o UX.
+Usa negritas HTML (<strong>) para resaltar el hallazgo clave de cada insight.
+Solo responde con los 5 párrafos numerados, sin preámbulo ni cierre.`;
+
+            try {
+                const resp = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-20250514',
+                        max_tokens: 1000,
+                        messages: [{ role: 'user', content: prompt }]
+                    })
+                });
+                const data = await resp.json();
+                const text = data.content?.map(b => b.text || '').join('') || '';
+
+                const insights = text.split('\n').filter(l => l.trim() && /^\d\./.test(l.trim()));
+                if (insights.length) {
+                    aiContent.innerHTML = '<div class="ai-insights">' + insights.map(i =>
+                        `<div class="ai-insight">${i.replace(/^\d\.\s*/, '')}</div>`
+                    ).join('') + '</div>';
+                } else {
+                    // fallback: show paragraphs
+                    const paras = text.split('\n').filter(l => l.trim());
+                    aiContent.innerHTML = '<div class="ai-insights">' + paras.slice(0, 5).map(p =>
+                        `<div class="ai-insight">${p}</div>`
+                    ).join('') + '</div>';
+                }
+            } catch (err) {
+                aiContent.innerHTML = `<div class="ai-insights">
+      <div class="ai-insight"><strong>Satisfacción: ${satAvg}/5</strong> — Los usuarios tienen una experiencia ${parseFloat(satAvg) >= 3.5 ? 'positiva pero con oportunidades' : 'mayormente negativa que requiere mejoras urgentes'} con las apps actuales.</div>
+      <div class="ai-insight"><strong>Principal frustración: ${topFrust}</strong> — Este es el punto de dolor más crítico a resolver en la propuesta de valor de SmartBus.</div>
+      <div class="ai-insight"><strong>Segmento principal: ${topEdad} en ${topDisp}</strong> — El diseño debe ser mobile-first y optimizado para este perfil de usuario.</div>
+      <div class="ai-insight"><strong>Valor diferencial esperado: ${topValor}</strong> — Enfocar el onboarding y marketing en este atributo generará mayor adopción.</div>
+      <div class="ai-insight"><strong>Feature más solicitada: ${topFuncion}</strong> — Incluirla en el MVP aumentará la retención y satisfacción del usuario.</div>
+    </div>`;
+            }
+        }
+
+        function exportCSV() {
+            if (!allResponses.length) return alert('No hay datos para exportar.');
+            const headers = ['timestamp', 'edad', 'genero', 'ciudad', 'estrato', 'ingresos', 'ocupacion', 'satisfaccion', 'frecuencia', 'dispositivo', 'conectividad', 'tech_conocimiento', 'confianza_pago', 'descubrimiento', 'apps', 'frustracion', 'tareas', 'situaciones', 'valores', 'funciones_extra', 'gusta', 'problema_grave', 'buena_experiencia', 'importancia_funcion'];
+            const rows = allResponses.map(r => headers.map(h => {
+                const v = r[h];
+                return Array.isArray(v) ? `"${v.join('; ')}"` : `"${(v || '').replace(/"/g, '""')}"`;
+            }).join(','));
+            const csv = [headers.join(','), ...rows].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `smartbus-encuesta-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+
+        function showTab(tab, btn) {
+            document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tab).style.display = 'block';
+            btn.classList.add('active');
+            if (tab === 'analisis') generateAIAnalysis(allResponses);
+        }
+
+        async function loadAndRender() {
+            try {
+                let responses = [];
+                // Phase 1: Local Storage
+                try {
+                    const stored = await window.storage.get('smartbus-responses', true);
+                    if (stored) responses = JSON.parse(stored.value);
+                } catch (e) { responses = []; }
+
+                // Phase 2: Global Persistence via Vercel KV
+                try {
+                    const apiResp = await fetch('/api/get');
+                    if (apiResp.ok) {
+                        const globalData = await apiResp.json();
+                        // Merge and deduplicate by ID if exists, or just merge
+                        // Here we'll just merge and unique by id
+                        const map = new Map();
+                        responses.concat(globalData).forEach(r => {
+                            if (r.id) map.set(r.id, r);
+                            else map.set(Math.random(), r); // fallback
+                        });
+                        responses = Array.from(map.values()).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    }
+                } catch (apiErr) {
+                    console.error('Global fetch failed:', apiErr);
+                }
+
+                allResponses = responses;
+
+                const isEmpty = !responses.length;
+                document.getElementById('emptyState').style.display = isEmpty ? 'block' : 'none';
+                document.getElementById('dashboardContent').style.display = isEmpty ? 'none' : 'block';
+
+                if (!isEmpty) {
+                    updateKPIs(responses);
+                    renderCharts(responses);
+                    renderTable(responses);
+                }
+            } catch (err) {
+                console.error('Error cargando datos:', err);
+            }
+        }
+
+        // Init
+        loadAndRender();
+        setInterval(loadAndRender, 30000); // Auto-refresh every 30s
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encuesta SmartBus Colombia</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bus: #FF5722;
+            --bus-deep: #BF360C;
+            --night: #0D0D1A;
+            --road: #1A1A2E;
+            --lane: #16213E;
+            --asphalt: #0F3460;
+            --white: #F5F0EB;
+            --muted: #8B8FA8;
+            --card: rgba(255, 255, 255, 0.04);
+            --border: rgba(255, 255, 255, 0.08);
+            --accent: #FFB300;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--night);
+            color: var(--white);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 50%;
+            width: 2px;
+            height: 100vh;
+            background: repeating-linear-gradient(to bottom, var(--accent) 0px, var(--accent) 30px, transparent 30px, transparent 60px);
+            opacity: 0.04;
+            pointer-events: none;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--road) 0%, var(--asphalt) 100%);
+            padding: 60px 24px 80px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: var(--night);
+            clip-path: ellipse(55% 100% at 50% 100%);
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: var(--bus);
+            color: white;
+            font-family: 'Syne', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            padding: 6px 16px;
+            border-radius: 2px;
+            margin-bottom: 20px;
+        }
+
+        .hero h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 16px;
+        }
+
+        .hero h1 span {
+            color: var(--bus);
+        }
+
+        .hero p {
+            color: var(--muted);
+            font-size: 15px;
+            max-width: 480px;
+            margin: 0 auto 28px;
+            line-height: 1.6;
+        }
+
+        .hero-meta {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .hero-meta span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .hero-meta strong {
+            color: var(--white);
+        }
+
+        .progress-wrap {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(13, 13, 26, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .progress-bar-outer {
+            flex: 1;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-bar-inner {
+            height: 100%;
+            background: linear-gradient(90deg, var(--bus), var(--accent));
+            border-radius: 2px;
+            transition: width 0.4s ease;
+            width: 0%;
+        }
+
+        .progress-label {
+            font-family: 'Syne', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .survey-wrap {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 40px 24px 80px;
+        }
+
+        .section {
+            margin-bottom: 48px;
+            animation: fadeUp 0.5s ease both;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 28px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-num {
+            width: 36px;
+            height: 36px;
+            background: var(--bus);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .section-sub {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .question {
+            margin-bottom: 28px;
+        }
+
+        .q-label {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .q-label .req {
+            color: var(--bus);
+            margin-left: 3px;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .opt-pill input {
+            display: none;
+        }
+
+        .opt-pill label {
+            display: block;
+            padding: 9px 18px;
+            border: 1.5px solid var(--border);
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--card);
+            color: var(--white);
+            user-select: none;
+        }
+
+        .opt-pill input:checked+label {
+            border-color: var(--bus);
+            background: rgba(255, 87, 34, 0.15);
+        }
+
+        .opt-pill label:hover {
+            border-color: rgba(255, 87, 34, 0.5);
+            background: rgba(255, 87, 34, 0.08);
+        }
+
+        .options-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .opt-stack input {
+            display: none;
+        }
+
+        .opt-stack label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--card);
+        }
+
+        .opt-stack label::before {
+            content: '';
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--muted);
+            border-radius: 50%;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .opt-stack.checkbox label::before {
+            border-radius: 4px;
+        }
+
+        .opt-stack input:checked+label {
+            border-color: var(--bus);
+            background: rgba(255, 87, 34, 0.1);
+        }
+
+        .opt-stack input:checked+label::before {
+            background: var(--bus);
+            border-color: var(--bus);
+        }
+
+        .scale-wrap {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+        }
+
+        .scale-wrap input {
+            display: none;
+        }
+
+        .scale-wrap label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 6px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            color: var(--muted);
+            text-align: center;
+            transition: all 0.2s;
+            background: var(--card);
+        }
+
+        .scale-wrap label .num {
+            font-family: 'Syne', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--white);
+        }
+
+        .scale-wrap input:checked+label {
+            border-color: var(--bus);
+            background: rgba(255, 87, 34, 0.15);
+        }
+
+        .text-input {
+            width: 100%;
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            color: var(--white);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            padding: 12px 16px;
+            outline: none;
+            transition: border-color 0.2s;
+            resize: vertical;
+        }
+
+        .text-input:focus {
+            border-color: var(--bus);
+        }
+
+        .text-input::placeholder {
+            color: var(--muted);
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 40px 0;
+        }
+
+        .submit-area {
+            text-align: center;
+            padding: 40px 0 20px;
+        }
+
+        .btn-submit {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bus);
+            color: white;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 15px;
+            padding: 16px 40px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-submit:hover {
+            background: #e64a19;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(255, 87, 34, 0.3);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .thank-you {
+            display: none;
+            text-align: center;
+            padding: 80px 24px;
+            animation: fadeUp 0.6s ease;
+        }
+
+        .thank-you .icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 87, 34, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 36px;
+        }
+
+        .thank-you h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .thank-you p {
+            color: var(--muted);
+            max-width: 400px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .save-status {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1a1a2e;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 18px;
+            font-size: 13px;
+            display: none;
+            animation: fadeUp 0.3s ease;
+        }
+
+        .save-status.show {
+            display: block;
+        }
+
+        .save-status.ok {
+            border-color: #4caf50;
+            color: #4caf50;
+        }
+
+        .save-status.err {
+            border-color: var(--bus);
+            color: var(--bus);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="hero">
+        <div class="hero-badge">🚌 SmartBus Colombia</div>
+        <h1>Ayúdanos a <span>mover</span><br>a Colombia mejor</h1>
+        <p>Esta encuesta nos permite diseñar una experiencia de transporte más inteligente, segura y cómoda para ti.</p>
+        <div class="hero-meta">
+            <span>⏱ <strong>5–7 minutos</strong></span>
+            <span>🔒 <strong>100% anónima</strong></span>
+            <span>📋 <strong>7 secciones</strong></span>
+        </div>
+    </div>
+
+    <div class="progress-wrap">
+        <div class="progress-bar-outer">
+            <div class="progress-bar-inner" id="progressBar"></div>
+        </div>
+        <div class="progress-label" id="progressLabel">0 / 7</div>
+    </div>
+
+    <form id="surveyForm" class="survey-wrap">
+
+        <!-- S1 -->
+        <div class="section" data-section="1">
+            <div class="section-header">
+                <div class="section-num">1</div>
+                <div>
+                    <div class="section-title">Perfil Demográfico</div>
+                    <div class="section-sub">Conocer quién eres nos ayuda a segmentar nuestras soluciones.</div>
+                </div>
+            </div>
+            <div class="question">
+                <div class="q-label">¿Cuál es tu rango de edad?<span class="req">*</span></div>
+                <div class="options-grid">
+                    <div class="opt-pill"><input type="radio" name="edad" id="e1" value="Menos de 18"><label
+                            for="e1">Menos de 18</label></div>
+                    <div class="opt-pill"><input type="radio" name="edad" id="e2" value="18-25"><label
+                            for="e2">18–25</label></div>
+                    <div class="opt-pill"><input type="radio" name="edad" id="e3" value="26-35"><label
+                            for="e3">26–35</label></div>
+                    <div class="opt-pill"><input type="radio" name="edad" id="e4" value="36-45"><label
+                            for="e4">36–45</label></div>
+                    <div class="opt-pill"><input type="radio" name="edad" id="e5" value="46-60"><label
+                            for="e5">46–60</label></div>
+                    <div class="opt-pill"><input type="radio" name="edad" id="e6" value="Más de 60"><label for="e6">Más
+                            de 60</label></div>
+                </div>
+            </div>
+            <div class="question">
+                <div class="q-label">Género<span class="req">*</span></div>
+                <div class="options-grid">
+                    <div class="opt-pill"><input type="radio" name="genero" id="g1" value="Femenino"><label
+                            for="g1">Femenino</label></div>
+                    <div class="opt-pill"><input type="radio" name="genero" id="g2" value="Masculino"><label
+                            for="g2">Masculino</label></div>
+                    <div class="opt-pill"><input type="radio" name="genero" id="g3" value="No binario"><label
+                            for="g3">No binario</label></div>
+                    <div class="opt-pill"><input type="radio" name="genero" id="g4" value="Prefiero no decirlo"><label
+                            for="g4">Prefiero no decirlo</label></div>
+                </div>
+            </div>
+            <div class="question">
+                <div class="q-label">Ciudad o municipio de residencia</div>
+                <input type="text" class="text-input" name="ciudad" placeholder="Ej: Bogotá, Medellín, Cali...">
+            </div>
+            <div class="question">
+                <div class="q-label">Estrato socioeconómico<span class="req">*</span></div>
+                <div class="options-grid">
+                    <div class="opt-pill"><input type="radio" name="estrato" id="es1" value="1"><label
+                            for="es1">1</label></div>
+                    <div class="opt-pill"><input type="radio" name="estrato" id="es2" value="2"><label
+                            for="es2">2</label></div>
+                    <div class="opt-pill"><input type="radio" name="estrato" id="es3" value="3"><label
+                            for="es3">3</label></div>
+                    <div class="opt-pill"><input type="radio" name="estrato" id="es4" value="4"><label
+                            for="es4">4</label></div>
+                    <div class="opt-pill"><input type="radio" name="estrato" id="es5" value="5"><label
+                            for="es5">5</label></div>
+                    <div class="opt-pill"><input type="radio" name="estrato" id="es6" value="6"><label
+                            for="es6">6</label></div>
+                </div>
+            </div>
+            <div class="question">
+                <div class="q-label">Rango de ingresos mensuales (COP)<span class="req">*</span></div>
+                <div class="options-stack">
+                    <div class="opt-stack"><input type="radio" name="ingresos" id="i1" value="Menos de 1 SMMLV"><label
+                            for="i1">Menos de 1 SMMLV</label></div>
+                    <div class="opt-stack"><input type="radio" name="ingresos" id="i2" value="1 a 2 SMMLV"><label
+                            for="i2">1 a 2 SMMLV</label></div>
+                    <div class="opt-stack"><input type="radio" name="ingresos" id="i3" value="2 a 4 SMMLV"><label
+                            for="i3">2 a 4 SMMLV</label></div>
+                    <div class="opt-stack"><input type="radio" name="ingresos" id="i4" value="Más de 4 SMMLV"><label
+                            for="i4">Más de 4 SMMLV</label></div>
+                </div>
+            </div>
+            <div class="question">
+                <div class="q-label">Ocupación<span class="req">*</span></div>
+                <div class="options-grid">
+                    <div class="opt-pill"><input type="radio" name="ocupacion" id="o1" value="Estudiante"><label
+                            for="o1">Estudiante</label></div>
+                    <div class="opt-pill"><input type="radio" name="ocupacion" id="o2" value="Empleado(a)"><label
+                            for="o2">Empleado(a)</label></div>
+                    <div class="opt-pill"><input type="radio" name="ocupacion" id="o3" value="Independiente"><label
+                            for="o3">Independiente</label></div>
+                    <div class="opt-pill"><input type="radio" name="ocupacion" id="o4" value="Desempleado(a)"><label
+                            for="o4">Desempleado(a)</label></div>
+                    <div class="opt-pill"><input type="radio" name="ocupacion" id="o5" value="Hogar"><label
+                            for="o5">Hogar</label></div>
+                </div>
+            </div>
+        </div>
+        <div class="divider"></div>
+
+        <!-- S2 -->
+        <div class="section" data-section="2">
+            <div class="section-header">
+                <div class="section-num">2</div>
+                <div>
+                    <div class="section-title">Experiencia con Apps Actuales</div>
+                    <div class="section-sub">¿Cómo te mueves hoy y qué opinas de las opciones actuales?</div>
+                </div>
+            </div>
+            <div class="question">
+                <div class="q-label">¿Qué aplicaciones de transporte utilizas actualmente? (Múltiple)</div>
+                <div class="options-stack checkbox">
+                    <div class="opt-stack"><input type="checkbox" name="apps" id="a1"
+                            value="Intermunicipal (RedBus, Pinbus)"><label for="a1">Apps de transporte intermunicipal
+                            (RedBus, Pinbus, etc.)</label></div>
+                    <div class="opt-stack"><input type="checkbox" name="apps" id="a2"
+                            value="Movilidad urbana (Uber, DiDi)"><label for="a2">Apps de movilidad urbana (Uber, DiDi,
+                            InDrive, Cabify)</label></div>
+                    <div class="opt-stack"><input type="checkbox" name="apps" id="a3"
+                            value="Transporte masivo (TransmiApp)"><label for="a3">Apps de transporte masivo
+                            (TransmiApp, Moovit)</label></div>
+                    <div class="opt-stack"><input type="checkbox" name="apps" id="a4"
+                            value="Sitios web empresas transporte"><label for="a4">Sitios web directos de empresas de
+                            transporte</label></div>
+                    <div class="opt-stack"><input type="checkbox" name="apps" id="a5" value="Ninguna"><label
+                            for="a5">Ninguna</label></div>
+                </div>
+            </div>
+            <div class="question">
+                <div class="q-label">¿Qué tan satisfecho estás con las apps actuales?<span class="req">*</span></div>
+                <div class="scale-wrap">
+                    <div><input type="radio" name="satisfaccion" id="s1" value="Muy insatisfecho"><label for="s1"><span
+                                class="num">😤</span>Muy insatisfecho</label></div>
+                    <div><input type="radio" name="satisfaccion" id="s2" value="Insatisfecho"><label for="s2"><span
+                                class="num">😕</span>Insatisfecho</label></div>
+                    <div><input type="radio" name="satisfaccion" id="s3" value="Neutral"><label for="s3"><span
+                                class="num">😐</span>Neutral</label></div>
+                    <div><input type="radio" name="satisfaccion" id="s4" value="Satisfecho"><label for="s4"><span
+                                class="num">😊</span>Satisfecho</label></div>
+                    <div><input type="radio" name="satisfaccion" id="s5" value="Muy satisfecho"><label for="s5"><span
+                                class="num">😄</span>Muy satisfecho</label></div>
+                </div>
+            </div>
+            <div class="question">
+                <div class="q-label">¿Qué te frustra más de las apps actuales? (Múltiple)</div>
+                <div class="options-stack checkbox">
+                    <div class="opt-stack"><input type="checkbox" name="frustracion" id="f1"
+                            value="Interfaz confusa"><label for="f1">Interfaz confusa o difícil de usar</label></div>
+                    <div class="opt-stack"><input type="checkbox" name="frustracion" id="f2"
+                            value="Horarios desactualizados"><label for="f2">Información de horarios
+                            desactualizada</label></div>
+                    <div class="opt-stack"><input type="checkbox" name="frustracion" id="f3"
+                            value="Fallos en pagos"><label for="f3">Fallos en el procesamiento de pagos</label></div>
+                    <div class="opt-stack"><input type="checkbox" name="frustracion" id="f4"
+                            value="Sin rastreo en tiempo real"><label for="f4">Falta de seguimiento en tiempo real del
+                            vehículo</label></div>
+                    <div class="opt-stack"><input type="checkbox" name="frustracion" id="f5"
+                            value="Poca seguridad percibida"><label for="f5">Poca seguridad percibida</label></div>
+                </div>
+            </div>
+            <div class="question">
+                <div class="q-label">¿Qué es lo que más te gusta de las apps que usas hoy?</div>
+                <textarea class="text-input" name="gusta" rows="3"
+                    placeholder="Cuéntanos qué funciona bien para ti..."></textarea>
+            </div>
+        </div>
+        <div class="divider"></div>
+
+        <!-- S3 -->
+        <div class="section" data-section="3">
+            <div class="section-header">
+                <div class="section-num">3</div>
+                <div>
+                    <div class="section-title">Tareas y Frecuencia de Uso</div>
+                    <div class="section-sub">Entendiendo tus necesidades diarias.</div>
+                </div>
+            </div>
+            <div class="question">
+                <div class="q-label">¿Con qué frecuencia realizas viajes que requieran reserva?<span
+                        class="req">*</span></div>
+                <div class="options-stack">
+                    <div class="opt-stack"><input type="radio" name="frecuencia" id="fr1" value="Diario"><label
+                            for="fr1">Diario</label></div>
+                    <div class="opt-stack"><input type="radio" name="frecuencia" id="fr2"
+                            value="2-3 veces/semana"><label for="fr2">2–3 veces por semana</label></div>
+                    <div class="opt-stack"><input type="radio" name="frecuencia" id="fr3" value="Quincenal"><label
+                            for="fr3">Quincenal</label></div>
+                    <div class="opt-stack"><input type="radio" name="frecuencia" id="fr4" value="Mensual"><label
+                            for="fr4">Mensual</label></div>
+                    <div class="opt-stack"><input type="radio" name="frecuencia" id="fr5" value="Ocasionalmente"><label
+                            for="fr5">Ocasionalmente</label></div>
+                </div>
+            </div>
+            <div class="question">
+                <div class="q-label">¿Cuáles son tus tareas principales al usar una app de transporte? (Múltiple)</div>
+                <div class="options-stack checkbox">
+                    <div class="opt-stack"><input type="checkbox" name="tareas" id="t1"
+                            value="Consultar precios y horarios"><label for="t1">Consultar precios y horarios</label>
+                    </div>
+                    <div class="opt-stack"><input type="checkbox" name="tareas" id="t2"
+                            value="Comprar y pagar tiquetes"><label for="t2">Comprar y pagar tiquetes</label></div>
+                    <div class="opt-stack"><input type="checkbox" name="tareas" id="t3"
+                            value="Rastrear ubicación del bus"><label for="t3">Rastrear la ubicación del bus en tiempo
+                            real</label></div>
+                    <div class="opt-stack"><input type="checkbox" name="tareas" id="t4"
+                            value="Revisar disponibilidad de asientos"><label for="t4">Revisar disponibilidad de
+                            asientos</label></div>
+                    <div class="opt-stack"><input type="checkbox" name="tareas" id="t5"
+                            value="Consultar historial/facturas"><label for="t5">Consultar historial de viajes o
+                            facturas</label></div>
+                </div>
+            </div>
+            <div class="question">
+                <div class="q-label">¿En qué situaciones sueles usar estas apps? (Múltiple)</div>
+                <div class="options-stack checkbox">
+                    <div class="opt-stack"><input type="checkbox" name="situaciones" id="si1"
+                            value="Días de antelación"><label for="si1">Planeando un viaje con días de
+                            antelación</label></div>
+                    <div class="opt-stack"><input type="checkbox" name="situaciones" id="si2"
+                            value="Minutos antes de salir"><label for="si2">Minutos antes de salir de casa u
+                            oficina</label></div>
+                    <div class="opt-stack"><input type="checkbox" name="situaciones" id="si3"
+                            value="En la terminal/paradero"><label for="si3">Estando ya en la terminal o
+                            paradero</label></div>
+                    <div class="opt-stack"><input type="checkbox" name="situaciones" id="si4"
+                            value="Durante el viaje"><label for="si4">Durante el viaje para monitorear la ruta</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="divider"></div>
+
+        <!-- S4 -->
+        <div class="section" data-section="4">
+            <div class="section-header">
+                <div class="section-num">4</div>
+                <div>
+                    <div class="section-title">Tecnología y Conectividad</div>
+                    <div class="section-sub">¿Cómo interactúas con el mundo digital?</div>
+                </div>
+            </div>
+            <div class="question">
+                <div class="q-label">¿Qué dispositivo usas principalmente?<span class="req">*</span></div>
+                <div class="options-grid">
+                    <div class="opt-pill"><input type="radio" name="dispositivo" id="d1" value="Android"><label
+                            for="d1">📱 Android</label></div>
+                    <div class="opt-pill"><input type="radio" name="dispositivo" id="d2" value="iPhone (iOS)"><label
+                            for="d2">🍎 iPhone</label></div>
+                    <div class="opt-pill"><input type="radio" name="dispositivo" id="d3" value="Computador (Web)"><label
+                            for="d3">💻 Computador</label></div>
+                    <div class="opt-pill"><input type="radio" name="dispositivo" id="d4" value="Tablet"><label
+                            for="d4">📲 Tablet</label></div>
+                </div>
+            </div>
+            <div class="question">
+                <div class="q-label">¿Cómo es tu conectividad habitual?<span class="req">*</span></div>
+                <div class="options-stack">
+                    <div class="opt-stack"><input type="radio" name="conectividad" id="c1"
+                            value="Datos móviles estables"><label for="c1">Siempre tengo datos móviles estables</label>
+                    </div>
+                    <div class="opt-stack"><input type="radio" name="conectividad" id="c2"
+                            value="Dependo de Wi-Fi"><label for="c2">Dependo de redes Wi-Fi</label></div>
+                    <div class="opt-stack"><input type="radio" name="conectividad" id="c3"
+                            value="Datos limitados/lentos"><label for="c3">Datos limitados o lentos</label></div>
+                </div>
+            </div>
+            <div class="question">
+                <div class="q-label">¿Qué tan familiarizado estás con "E-ticket", "QR de abordaje" o "Pasarela de
+                    pagos"?<span class="req">*</span></div>
+                <div class="options-stack">
+                    <div class="opt-stack"><input type="radio" name="tech_conocimiento" id="tc1"
+                            value="No los conozco"><label for="tc1">No los conozco</label></div>
+                    <div class="opt-stack"><input type="radio" name="tech_conocimiento" id="tc2"
+                            value="Los conozco pero no uso"><label for="tc2">He oído de ellos pero no sé usarlos</label>
+                    </div>
+                    <div class="opt-stack"><input type="radio" name="tech_conocimiento" id="tc3"
+                            value="Los uso con facilidad"><label for="tc3">Los conozco y uso con facilidad</label></div>
+                </div>
+            </div>
+        </div>
+        <div class="divider"></div>
+
+        <!-- S5 -->
+        <div class="section" data-section="5">
+            <div class="section-header">
+                <div class="section-num">5</div>
+                <div>
+                    <div class="section-title">Actitudes y Valores</div>
+                    <div class="section-sub">Tu mentalidad frente a la tecnología y el transporte.</div>
+                </div>
+            </div>
+            <div class="question">
+                <div class="q-label">¿Qué tanta confianza tienes al realizar pagos electrónicos en apps nuevas?<span
+                        class="req">*</span></div>
+                <div class="options-stack">
+                    <div class="opt-stack"><input type="radio" name="confianza_pago" id="cp1"
+                            value="Mucha confianza"><label for="cp1">Mucha confianza — pago sin problema</label></div>
+                    <div class="opt-stack"><input type="radio" name="confianza_pago" id="cp2"
+                            value="Confianza moderada"><label for="cp2">Confianza moderada — reviso antes de
+                            pagar</label></div>
+                    <div class="opt-stack"><input type="radio" name="confianza_pago" id="cp3"
+                            value="Prefiero efectivo"><label for="cp3">Desconfío — prefiero pagar en efectivo</label>
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <div class="q-label">¿Qué valoras más en una app de transporte? (Máximo 2)</div>
+                <div class="options-stack checkbox">
+                    <div class="opt-stack"><input type="checkbox" name="valores" id="v1" value="Seguridad"><label
+                            for="v1">🛡️ Seguridad (saber quién conduce y dónde está)</label></div>
+                    <div class="opt-stack"><input type="checkbox" name="valores" id="v2" value="Rapidez"><label
+                            for="v2">⚡ Rapidez (comprar en menos de 3 clics)</label></div>
+                    <div class="opt-stack"><input type="checkbox" name="valores" id="v3" value="Economía"><label
+                            for="v3">💰 Economía (mejores precios y promociones)</label></div>
+                    <div class="opt-stack"><input type="checkbox" name="valores" id="v4" value="Comodidad"><label
+                            for="v4">🌟 Comodidad (interfaz clara y buen soporte)</label></div>
+                </div>
+            </div>
+            <div class="question">
+                <div class="q-label">¿Cómo prefieres aprender a usar una app nueva?<span class="req">*</span></div>
+                <div class="options-stack">
+                    <div class="opt-stack"><input type="radio" name="aprendizaje" id="ap1" value="Ensayo y error"><label
+                            for="ap1">Explorando por mi cuenta (ensayo y error)</label></div>
+                    <div class="opt-stack"><input type="radio" name="aprendizaje" id="ap2"
+                            value="Tutorial visual"><label for="ap2">Mediante un tutorial visual rápido al
+                            inicio</label></div>
+                    <div class="opt-stack"><input type="radio" name="aprendizaje" id="ap3"
+                            value="Sección de ayuda/FAQ"><label for="ap3">Leyendo ayuda o preguntas frecuentes</label>
+                    </div>
+                    <div class="opt-stack"><input type="radio" name="aprendizaje" id="ap4"
+                            value="Video explicativo"><label for="ap4">Viendo un video corto explicativo</label></div>
+                </div>
+            </div>
+        </div>
+        <div class="divider"></div>
+
+        <!-- S6 -->
+        <div class="section" data-section="6">
+            <div class="section-header">
+                <div class="section-num">6</div>
+                <div>
+                    <div class="section-title">Errores Críticos y Expectativas</div>
+                    <div class="section-sub">Aprendiendo del pasado para construir el futuro.</div>
+                </div>
+            </div>
+            <div class="question">
+                <div class="q-label">¿Has tenido algún problema grave con apps similares?</div>
+                <textarea class="text-input" name="problema_grave" rows="4"
+                    placeholder="Ej: me cobraron doble, el bus nunca llegó, la app se cerró al pagar..."></textarea>
+            </div>
+            <div class="question">
+                <div class="q-label">¿Qué define una "buena experiencia" en una app de movilidad?<span
+                        class="req">*</span></div>
+                <textarea class="text-input" name="buena_experiencia" rows="3"
+                    placeholder="Describe con tus palabras qué significa para ti..."></textarea>
+            </div>
+            <div class="question">
+                <div class="q-label">¿Cómo sueles descubrir nuevas apps de servicios?<span class="req">*</span></div>
+                <div class="options-stack">
+                    <div class="opt-stack"><input type="radio" name="descubrimiento" id="dc1"
+                            value="Recomendación amigos/familia"><label for="dc1">Recomendación de amigos o
+                            familia</label></div>
+                    <div class="opt-stack"><input type="radio" name="descubrimiento" id="dc2"
+                            value="Publicidad en redes sociales"><label for="dc2">Publicidad en redes sociales</label>
+                    </div>
+                    <div class="opt-stack"><input type="radio" name="descubrimiento" id="dc3"
+                            value="Tienda de apps"><label for="dc3">Buscando en la tienda de apps</label></div>
+                    <div class="opt-stack"><input type="radio" name="descubrimiento" id="dc4"
+                            value="Publicidad física"><label for="dc4">Publicidad física (vallas, terminales)</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="divider"></div>
+
+        <!-- S7 -->
+        <div class="section" data-section="7">
+            <div class="section-header">
+                <div class="section-num">7</div>
+                <div>
+                    <div class="section-title">Funciones Adicionales</div>
+                    <div class="section-sub">¿Qué más podemos hacer por ti?</div>
+                </div>
+            </div>
+            <div class="question">
+                <div class="q-label">¿Qué función extra te gustaría en SmartBus Colombia? (Múltiple)</div>
+                <div class="options-stack checkbox">
+                    <div class="opt-stack"><input type="checkbox" name="funciones_extra" id="fe1"
+                            value="Programa de lealtad/puntos"><label for="fe1">🏆 Sistema de puntos o programa de
+                            lealtad</label></div>
+                    <div class="opt-stack"><input type="checkbox" name="funciones_extra" id="fe2"
+                            value="Botón de pánico/ubicación"><label for="fe2">🆘 Botón de pánico o compartir ubicación
+                            con contactos</label></div>
+                    <div class="opt-stack"><input type="checkbox" name="funciones_extra" id="fe3"
+                            value="Servicios adicionales (comida, wifi)"><label for="fe3">🍔 Reservar servicios
+                            adicionales (comida, wifi, equipaje)</label></div>
+                    <div class="opt-stack"><input type="checkbox" name="funciones_extra" id="fe4"
+                            value="Chat con conductor/soporte"><label for="fe4">💬 Chat directo con conductor o soporte
+                            en vivo</label></div>
+                </div>
+            </div>
+            <div class="question">
+                <div class="q-label">¿Por qué consideras importante la función seleccionada?</div>
+                <textarea class="text-input" name="importancia_funcion" rows="3"
+                    placeholder="Cuéntanos por qué esta función marcaría la diferencia para ti..."></textarea>
+            </div>
+        </div>
+
+        <div class="submit-area">
+            <button type="submit" class="btn-submit" id="btnSubmit">
+                Enviar respuestas
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                </svg>
+            </button>
+        </div>
+    </form>
+
+    <div class="thank-you" id="thankYou">
+        <div class="icon">🚌</div>
+        <h2>¡Gracias por tu tiempo!</h2>
+        <p>Tus respuestas han sido guardadas y formarán parte del análisis para mejorar la movilidad en Colombia.</p>
+    </div>
+
+    <div class="save-status" id="saveStatus"></div>
+
+    <script>
+        // Compatibility shim for window.storage
+        if (!window.storage) {
+            window.storage = {
+                get: async (key) => ({ value: localStorage.getItem(key) }),
+                set: async (key, value) => { localStorage.setItem(key, value); }
+            };
+        }
+
+        // Progress
+        function updateProgress() {
+            const sections = document.querySelectorAll('.section');
+            const filled = Array.from(sections).filter(s => {
+                const inputs = s.querySelectorAll('input:checked, textarea, input[type=text]');
+                return Array.from(inputs).some(i => i.type === 'radio' ? i.checked : i.type === 'checkbox' ? i.checked : i.value.trim());
+            }).length;
+            const pct = Math.round((filled / sections.length) * 100);
+            document.getElementById('progressBar').style.width = pct + '%';
+            document.getElementById('progressLabel').textContent = filled + ' / ' + sections.length;
+        }
+        document.getElementById('surveyForm').addEventListener('change', updateProgress);
+        document.getElementById('surveyForm').addEventListener('input', updateProgress);
+
+        // Max 2 valores
+        document.querySelectorAll('input[name="valores"]').forEach(cb => {
+            cb.addEventListener('change', () => {
+                const checked = document.querySelectorAll('input[name="valores"]:checked');
+                if (checked.length > 2) cb.checked = false;
+            });
+        });
+
+        function showStatus(msg, type) {
+            const el = document.getElementById('saveStatus');
+            el.textContent = msg;
+            el.className = 'save-status show ' + type;
+            setTimeout(() => el.className = 'save-status', 3000);
+        }
+
+        // Collect form data
+        function collectData() {
+            const data = { timestamp: new Date().toISOString(), id: 'resp_' + Date.now() };
+            const form = document.getElementById('surveyForm');
+            // Single values
+            ['edad', 'genero', 'estrato', 'ingresos', 'ocupacion', 'satisfaccion', 'frecuencia', 'dispositivo',
+                'conectividad', 'tech_conocimiento', 'confianza_pago', 'aprendizaje', 'descubrimiento'].forEach(name => {
+                    const el = form.querySelector(`input[name="${name}"]:checked`);
+                    data[name] = el ? el.value : '';
+                });
+            // Checkboxes (multiple)
+            ['apps', 'frustracion', 'tareas', 'situaciones', 'valores', 'funciones_extra'].forEach(name => {
+                data[name] = Array.from(form.querySelectorAll(`input[name="${name}"]:checked`)).map(i => i.value);
+            });
+            // Text fields
+            ['ciudad', 'gusta', 'problema_grave', 'buena_experiencia', 'importancia_funcion'].forEach(name => {
+                const el = form.querySelector(`[name="${name}"]`);
+                data[name] = el ? el.value.trim() : '';
+            });
+            return data;
+        }
+
+        // Submit
+        document.getElementById('surveyForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.textContent = 'Guardando...';
+
+            const data = collectData();
+
+            try {
+                // Load existing responses
+                let responses = [];
+                try {
+                    const existing = await window.storage.get('smartbus-responses', true);
+                    if (existing) responses = JSON.parse(existing.value);
+                } catch (err) { responses = []; }
+
+                responses.push(data);
+                await window.storage.set('smartbus-responses', JSON.stringify(responses), true);
+
+                // Update counter
+                await window.storage.set('smartbus-count', String(responses.length), true);
+
+                // Phase 2: Global Persistence via Vercel KV
+                try {
+                    await fetch('/api/save', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                } catch (apiErr) {
+                    console.error('Global save failed:', apiErr);
+                    // We don't block the user if global save fails as local save succeeded
+                }
+
+                document.getElementById('surveyForm').style.display = 'none';
+                document.getElementById('thankYou').style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (err) {
+                showStatus('❌ Error al guardar. Intenta de nuevo.', 'err');
+                btn.disabled = false;
+                btn.textContent = 'Enviar respuestas';
+                console.error(err);
+            }
+        });
+    </script>
+</body>
+
+</html>
