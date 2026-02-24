@@ -1070,7 +1070,7 @@ Solo responde con los 5 párrafos numerados, sin preámbulo ni cierre.`;
                 // Phase 1: Local Storage
                 try {
                     const stored = await window.storage.get('smartbus-responses', true);
-                    if (stored) responses = JSON.parse(stored.value);
+                    if (stored && stored.value) responses = JSON.parse(stored.value) || [];
                 } catch (e) { responses = []; }
 
                 // Phase 2: Global Persistence via Vercel KV
@@ -1081,7 +1081,8 @@ Solo responde con los 5 párrafos numerados, sin preámbulo ni cierre.`;
                         // Merge and deduplicate by ID if exists, or just merge
                         // Here we'll just merge and unique by id
                         const map = new Map();
-                        responses.concat(globalData).forEach(r => {
+                        const localData = Array.isArray(responses) ? responses : [];
+                        localData.concat(globalData).forEach(r => {
                             if (r.id) map.set(r.id, r);
                             else map.set(Math.random(), r); // fallback
                         });

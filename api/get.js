@@ -1,4 +1,9 @@
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
+
+const redis = new Redis({
+    url: process.env.KV_REST_API_URL,
+    token: process.env.KV_REST_API_TOKEN,
+});
 
 export default async function handler(request, response) {
     if (request.method !== 'GET') {
@@ -6,11 +11,7 @@ export default async function handler(request, response) {
     }
 
     try {
-        // Retrieve all responses from the Redis list 'smartbus-responses'
-        // LRANGE key start stop (0 -1 gets the whole list)
-        const rawResponses = await kv.lrange('smartbus-responses', 0, -1);
-
-        // Parse the JSON strings back into objects
+        const rawResponses = await redis.lrange('smartbus-responses', 0, -1);
         const responses = rawResponses.map(r => {
             try {
                 return typeof r === 'string' ? JSON.parse(r) : r;
@@ -18,7 +19,6 @@ export default async function handler(request, response) {
                 return r;
             }
         });
-
         return response.status(200).json(responses);
     } catch (error) {
         console.error('Get error:', error);

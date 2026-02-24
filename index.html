@@ -987,7 +987,7 @@
                 let responses = [];
                 try {
                     const existing = await window.storage.get('smartbus-responses', true);
-                    if (existing) responses = JSON.parse(existing.value);
+                    if (existing && existing.value) responses = JSON.parse(existing.value) || [];
                 } catch (err) { responses = []; }
 
                 responses.push(data);

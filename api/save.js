@@ -1,4 +1,9 @@
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
+
+const redis = new Redis({
+    url: process.env.KV_REST_API_URL,
+    token: process.env.KV_REST_API_TOKEN,
+});
 
 export default async function handler(request, response) {
     if (request.method !== 'POST') {
@@ -7,11 +12,7 @@ export default async function handler(request, response) {
 
     try {
         const data = request.body;
-
-        // Push the response data into a Redis list named 'smartbus-responses'
-        // We use lpush to have the latest responses at the beginning
-        await kv.lpush('smartbus-responses', JSON.stringify(data));
-
+        await redis.lpush('smartbus-responses', JSON.stringify(data));
         return response.status(200).json({ success: true });
     } catch (error) {
         console.error('Save error:', error);
