@@ -770,13 +770,7 @@
     </div>
 
     <script>
-        // Compatibility shim for window.storage
-        if (!window.storage) {
-            window.storage = {
-                get: async (key) => ({ value: localStorage.getItem(key) }),
-                set: async (key, value) => { localStorage.setItem(key, value); }
-            };
-        }
+        // Removed compatibility shim for window.storage as we are using the backend API directly
 
         let allResponses = [];
         let charts = {};
@@ -1067,29 +1061,17 @@ Solo responde con los 5 párrafos numerados, sin preámbulo ni cierre.`;
         async function loadAndRender() {
             try {
                 let responses = [];
-                // Phase 1: Local Storage
-                try {
-                    const stored = await window.storage.get('smartbus-responses', true);
-                    if (stored && stored.value) responses = JSON.parse(stored.value) || [];
-                } catch (e) { responses = []; }
 
-                // Phase 2: Global Persistence via Vercel KV
-                try {
-                    const apiResp = await fetch('/api/get');
-                    if (apiResp.ok) {
-                        const globalData = await apiResp.json();
-                        // Merge and deduplicate by ID if exists, or just merge
-                        // Here we'll just merge and unique by id
-                        const map = new Map();
-                        const localData = Array.isArray(responses) ? responses : [];
-                        localData.concat(globalData).forEach(r => {
-                            if (r.id) map.set(r.id, r);
-                            else map.set(Math.random(), r); // fallback
-                        });
-                        responses = Array.from(map.values()).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                // Global Persistence via Vercel KV
+                const apiResp = await fetch('/api/get');
+                if (apiResp.ok) {
+                    const globalData = await apiResp.json();
+
+                    if (Array.isArray(globalData)) {
+                        responses = globalData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                     }
-                } catch (apiErr) {
-                    console.error('Global fetch failed:', apiErr);
+                } else {
+                    console.error('Global fetch failed with status:', apiResp.status);
                 }
 
                 allResponses = responses;

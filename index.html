@@ -914,13 +914,7 @@
     <div class="save-status" id="saveStatus"></div>
 
     <script>
-        // Compatibility shim for window.storage
-        if (!window.storage) {
-            window.storage = {
-                get: async (key) => ({ value: localStorage.getItem(key) }),
-                set: async (key, value) => { localStorage.setItem(key, value); }
-            };
-        }
+        // Removed compatibility shim for window.storage as we are using the backend API directly
 
         // Progress
         function updateProgress() {
@@ -983,29 +977,15 @@
             const data = collectData();
 
             try {
-                // Load existing responses
-                let responses = [];
-                try {
-                    const existing = await window.storage.get('smartbus-responses', true);
-                    if (existing && existing.value) responses = JSON.parse(existing.value) || [];
-                } catch (err) { responses = []; }
+                // Global Persistence via Vercel KV
+                const response = await fetch('/api/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
 
-                responses.push(data);
-                await window.storage.set('smartbus-responses', JSON.stringify(responses), true);
-
-                // Update counter
-                await window.storage.set('smartbus-count', String(responses.length), true);
-
-                // Phase 2: Global Persistence via Vercel KV
-                try {
-                    await fetch('/api/save', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data)
-                    });
-                } catch (apiErr) {
-                    console.error('Global save failed:', apiErr);
-                    // We don't block the user if global save fails as local save succeeded
+                if (!response.ok) {
+                    throw new Error('Error saving data to the server');
                 }
 
                 document.getElementById('surveyForm').style.display = 'none';
