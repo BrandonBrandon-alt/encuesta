@@ -9,6 +9,7 @@
         href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap"
         rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
             --bg: #F7F4EF;
@@ -476,6 +477,13 @@
             font-weight: 600;
         }
 
+        .export-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
         .export-btn {
             display: inline-flex;
             align-items: center;
@@ -489,12 +497,22 @@
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            margin-bottom: 20px;
             transition: all 0.2s;
         }
 
         .export-btn:hover {
             background: #e64a19;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(255, 87, 34, 0.35);
+        }
+
+        .export-btn.excel {
+            background: #1D6F42;
+        }
+
+        .export-btn.excel:hover {
+            background: #155534;
+            box-shadow: 0 4px 14px rgba(29, 111, 66, 0.35);
         }
 
         @media (max-width: 640px) {
@@ -730,7 +748,10 @@
 
             <!-- TAB RESPUESTAS -->
             <div id="tab-respuestas" style="display:none">
-                <button class="export-btn" onclick="exportCSV()">⬇ Exportar CSV</button>
+                <div class="export-actions">
+                    <button class="export-btn" onclick="exportCSV()">⬇ Exportar CSV</button>
+                    <button class="export-btn excel" onclick="exportExcel()">📊 Exportar Excel</button>
+                </div>
                 <div class="chart-card">
                     <h3>Respuestas Individuales</h3>
                     <div class="chart-sub">Todas las respuestas almacenadas</div>
@@ -1048,6 +1069,74 @@ Solo responde con los 5 párrafos numerados, sin preámbulo ni cierre.`;
             a.href = URL.createObjectURL(blob);
             a.download = `smartbus-encuesta-${new Date().toISOString().split('T')[0]}.csv`;
             a.click();
+        }
+
+        function exportExcel() {
+            if (!allResponses.length) return alert('No hay datos para exportar.');
+
+            const FIELD_LABELS = {
+                timestamp: 'Fecha/Hora',
+                edad: 'Edad',
+                genero: 'Género',
+                ciudad: 'Ciudad',
+                estrato: 'Estrato',
+                ingresos: 'Ingresos',
+                ocupacion: 'Ocupación',
+                satisfaccion: 'Satisfacción',
+                frecuencia: 'Frecuencia viajes',
+                dispositivo: 'Dispositivo',
+                conectividad: 'Conectividad',
+                tech_conocimiento: 'Nivel tecnológico',
+                confianza_pago: 'Confianza en pagos',
+                descubrimiento: 'Cómo descubre apps',
+                apps: 'Apps que usa',
+                frustracion: 'Frustraciones',
+                tareas: 'Tareas principales',
+                situaciones: 'Situaciones de uso',
+                valores: 'Valores importantes',
+                funciones_extra: 'Funciones deseadas',
+                gusta: 'Qué le gusta',
+                problema_grave: 'Problema grave',
+                buena_experiencia: 'Buena experiencia',
+                importancia_funcion: 'Importancia función'
+            };
+
+            const fields = Object.keys(FIELD_LABELS);
+            const headerRow = fields.map(f => FIELD_LABELS[f]);
+
+            const dataRows = allResponses.map(r => fields.map(f => {
+                const v = r[f];
+                if (f === 'timestamp') return v ? new Date(v).toLocaleString('es-CO') : '';
+                return Array.isArray(v) ? v.join('; ') : (v || '');
+            }));
+
+            const wsData = [headerRow, ...dataRows];
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+            // Column widths
+            ws['!cols'] = fields.map(f => ({
+                wch: ['gusta', 'problema_grave', 'buena_experiencia', 'importancia_funcion'].includes(f) ? 40
+                    : ['apps', 'frustracion', 'tareas', 'situaciones', 'valores', 'funciones_extra'].includes(f) ? 35
+                        : f === 'timestamp' ? 20
+                            : 18
+            }));
+
+            // Style header row (bold + background)
+            headerRow.forEach((_, colIdx) => {
+                const cellAddr = XLSX.utils.encode_cell({ r: 0, c: colIdx });
+                if (!ws[cellAddr]) return;
+                ws[cellAddr].s = {
+                    font: { bold: true, color: { rgb: 'FFFFFF' } },
+                    fill: { fgColor: { rgb: 'FF5722' } },
+                    alignment: { horizontal: 'center', wrapText: true }
+                };
+            });
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Respuestas');
+
+            const filename = `smartbus-encuesta-${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, filename);
         }
 
         function showTab(tab, btn) {
